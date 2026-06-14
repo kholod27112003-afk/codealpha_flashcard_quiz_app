@@ -30,9 +30,7 @@ class FlashcardPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is FlashcardLoaded) {
-            if (state.flashcards.isEmpty) {
-              return _buildEmptyState(context);
-            }
+            if (state.flashcards.isEmpty) return _buildEmptyState(context);
             return _buildContent(context, state);
           }
           return const SizedBox.shrink();
@@ -53,11 +51,7 @@ class FlashcardPage extends StatelessWidget {
       elevation: 0,
       title: Row(
         children: [
-          Icon(
-            Icons.style_rounded,
-            color: theme.colorScheme.primary,
-            size: 28,
-          ),
+          Icon(Icons.style_rounded, color: theme.colorScheme.primary, size: 28),
           const SizedBox(width: 10),
           Text(
             'FlashCards',
@@ -82,11 +76,9 @@ class FlashcardPage extends StatelessWidget {
                   onPressed: () => _showForm(context, state.currentCard),
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete_rounded,
-                      color: theme.colorScheme.error),
+                  icon: Icon(Icons.delete_rounded, color: theme.colorScheme.error),
                   tooltip: 'Delete card',
-                  onPressed: () =>
-                      _confirmDelete(context, state.currentCard!.id),
+                  onPressed: () => _confirmDelete(context, state.currentCard!.id),
                 ),
                 const SizedBox(width: 8),
               ],
@@ -98,8 +90,7 @@ class FlashcardPage extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, FlashcardLoaded state) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return SafeArea(
       child: Padding(
@@ -107,103 +98,84 @@ class FlashcardPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 8),
-            // Progress indicator
             _buildProgressBar(context, state),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
             // Flashcard
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0.1, 0),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.1, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                ),
                 child: FlashcardWidget(
                   key: ValueKey(state.currentCard!.id),
                   flashcard: state.currentCard!,
                   isAnswerVisible: state.isAnswerVisible,
-                  onToggleAnswer: () =>
-                      context.read<FlashcardBloc>().add(const ToggleAnswerEvent()),
+                  onToggleAnswer: () => context
+                      .read<FlashcardBloc>()
+                      .add(const ToggleAnswerEvent()),
                 ),
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 12),
 
-            // Show Answer button
-            if (!state.isAnswerVisible)
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.tonal(
-                  onPressed: () =>
-                      context.read<FlashcardBloc>().add(const ToggleAnswerEvent()),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.visibility_rounded),
-                      SizedBox(width: 8),
-                      Text('Show Answer',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
-                    ],
-                  ),
+            // Show / Hide Answer
+            SizedBox(
+              width: double.infinity,
+              child: state.isAnswerVisible
+                  ? OutlinedButton.icon(
+                onPressed: () => context
+                    .read<FlashcardBloc>()
+                    .add(const ToggleAnswerEvent()),
+                icon: const Icon(Icons.visibility_off_rounded, size: 18),
+                label: const Text('Hide Answer',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
               )
-            else
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () =>
-                      context.read<FlashcardBloc>().add(const ToggleAnswerEvent()),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.visibility_off_rounded),
-                      SizedBox(width: 8),
-                      Text('Hide Answer',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
-                    ],
-                  ),
+                  : FilledButton.tonalIcon(
+                onPressed: () => context
+                    .read<FlashcardBloc>()
+                    .add(const ToggleAnswerEvent()),
+                icon: const Icon(Icons.visibility_rounded, size: 18),
+                label: const Text('Show Answer',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
               ),
-            const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 10),
 
-            // Navigation buttons
+            // Navigation
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: state.hasPrevious
                         ? () => context
-                            .read<FlashcardBloc>()
-                            .add(const PreviousCardEvent())
+                        .read<FlashcardBloc>()
+                        .add(const PreviousCardEvent())
                         : null,
                     icon: const Icon(Icons.arrow_back_ios_rounded, size: 16),
                     label: const Text('Previous'),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                          borderRadius: BorderRadius.circular(14)),
                     ),
                   ),
                 ),
@@ -212,19 +184,18 @@ class FlashcardPage extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: state.hasNext
                         ? () => context
-                            .read<FlashcardBloc>()
-                            .add(const NextCardEvent())
+                        .read<FlashcardBloc>()
+                        .add(const NextCardEvent())
                         : null,
                     icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
                     label: const Text('Next'),
                     iconAlignment: IconAlignment.end,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                          borderRadius: BorderRadius.circular(14)),
                     ),
                   ),
                 ),
@@ -240,8 +211,7 @@ class FlashcardPage extends StatelessWidget {
   Widget _buildProgressBar(BuildContext context, FlashcardLoaded state) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final progress =
-        (state.currentIndex + 1) / state.flashcards.length;
+    final progress = (state.currentIndex + 1) / state.flashcards.length;
 
     return Column(
       children: [
@@ -264,7 +234,7 @@ class FlashcardPage extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: LinearProgressIndicator(
@@ -293,25 +263,18 @@ class FlashcardPage extends StatelessWidget {
                 color: colorScheme.primaryContainer.withOpacity(0.3),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.style_outlined,
-                size: 64,
-                color: colorScheme.primary.withOpacity(0.6),
-              ),
+              child: Icon(Icons.style_outlined,
+                  size: 64, color: colorScheme.primary.withOpacity(0.6)),
             ),
             const SizedBox(height: 24),
-            Text(
-              'No flashcards yet',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('No flashcards yet',
+                style: theme.textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text(
               'Tap "Add Card" to create your first flashcard and start studying.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -342,8 +305,7 @@ class FlashcardPage extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Delete Card'),
-        content:
-            const Text('Are you sure you want to delete this flashcard?'),
+        content: const Text('Are you sure you want to delete this flashcard?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -355,8 +317,7 @@ class FlashcardPage extends StatelessWidget {
               Navigator.pop(ctx);
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+                backgroundColor: Theme.of(context).colorScheme.error),
             child: const Text('Delete'),
           ),
         ],
